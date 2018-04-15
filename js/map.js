@@ -24,6 +24,9 @@ var offerType = {
 var userPin = map.querySelector(".map__pin--main");
 var allMapPins;
 var allMapCards;
+var popupClose;
+var ENTER_KEYCODE = 13;
+var ESC_KEYCODE = 27;
 
 //Генерация целого числа в диапазоне min max
 var getRandomInteger = function(min, max) {
@@ -35,21 +38,19 @@ var getRandomNumberForArray = function(array) {
 }
 
 //Генерация иконки объявления - шаблона
-var generateAdv = function(similarAdvertPin) {
+var generateAdv = function(similarAdvertPin, i) {
   var advElementPinTemplate = template.querySelector(".map__pin").cloneNode(true);
   advElementPinTemplate.querySelector("img").src = similarAdvertPin.author.avatar;
   advElementPinTemplate.style = "left: " + (similarAdvertPin.location.x - MAP_PIN_WIDTH) + "px; " + "top: " + (similarAdvertPin.location.y - MAP_PIN_HEIGHT) + "px";
-  // advElementPinTemplate.addEventListener("click", function() {
-  //   var allMapCards =template.querySelectorAll(".map__card")
-  //   advElementMapCardTemplate.classList.remove("hidden");
-  // });
+  advElementPinTemplate.className = "map__pin button" + i;
   return advElementPinTemplate;
 };
+
 //Генерация всех иконок объявления - шаблона
 var createAdvFragmentPin = function () {
   var fragmentPin = document.createDocumentFragment();
   for (var i = 0; i < similarAdv.length; i++) {
-    fragmentPin.appendChild(generateAdv(similarAdv[i]));
+    fragmentPin.appendChild(generateAdv(similarAdv[i], i));
   };
   mapPins.appendChild(fragmentPin)
   return mapPins;
@@ -86,7 +87,9 @@ var renderMapCard = function(similarAdvMapCard) {
 //Создание шаблона похожего объявления
 var createAdvFragmentMap = function() {
   var fragmentMap = document.createDocumentFragment();
-  fragmentMap.appendChild(renderMapCard(similarAdv[2]));
+  for (var i = 0; i < similarAdv.length; i++) {
+    fragmentMap.appendChild(renderMapCard(similarAdv[i]));
+  };
   return map.appendChild(fragmentMap);
 };
 
@@ -143,15 +146,46 @@ userPin.addEventListener("mouseup", function() {
   })();
   allMapPins = document.querySelectorAll(".map__pin");
   allMapCards = document.querySelectorAll(".map__card");
+  popupClose = document.querySelectorAll(".popup__close");
 });
 
-// var allMapCards = document.querySelectorAll(".map__card");
 (function() {
-  map.addEventListener("click", function() {
-  for (var i = 0; i < allMapPins.length; i++) {
-    if (event.target.className[i] == ".map__pin") {
-      allMapCards[i].classList.remove("hidden")
+  map.addEventListener("click", function(event) {
+  for (var i = 0; i < allMapCards.length; i++) {
+    if ((event.target.classList.contains("map__pin")) || (event.target.parentNode.classList.contains("map__pin"))) {
+      allMapCards[i].classList.add("hidden");
+    }
+    if ((event.target.className == ("map__pin button" + [i])) || (event.target.parentNode.className == ("map__pin button" + [i]))) {
+      allMapCards[i].classList.remove("hidden");
+    }
+  };
+  for (var j = 0; j < popupClose.length; j++) {
+    if (event.target.className == "popup__close") {
+      allMapCards[j].classList.add("hidden");
+      allMapPins[j+1].classList.remove("map__pin--active");
+    }
+  }
+  for (var k = 0; k < allMapPins.length - 1; k++) {
+    if (event.target.className == ("map__pin button" + [k])) {
+      event.target.classList.add("map__pin--active");
+    } else if (event.target.parentNode.className == ("map__pin button" + [k])) {
+      event.target.parentNode.classList.add("map__pin--active");
+    } else if ((event.target.classList.contains("map__pin")) || (event.target.parentNode.classList.contains("map__pin"))) {
+      allMapPins[k+1].classList.remove("map__pin--active");
     }
   }
 }, false);
+  map.addEventListener("keydown", function(event) {
+    for (var i = 0; i < allMapPins.length - 1; i++) {
+      if ((event.keyCode == ENTER_KEYCODE) && (document.activeElement.classList.contains("map__pin button" + i))) {
+        allMapCards[i].classList.remove("hidden");
+      }
+    }
+    for (var i = 0; i < allMapPins.length - 1; i++) {
+      if ((event.keyCode == ESC_KEYCODE) && (!allMapCards[i].classList.contains("hidden"))) {
+        allMapCards[i].classList.add("hidden");
+        allMapPins[i+1].classList.remove("map__pin--active");
+      }
+    }
+  }, false);
 })();

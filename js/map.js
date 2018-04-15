@@ -1,21 +1,11 @@
-var locationMap = {
-  x: 300 + Math.floor(Math.random() * (600)),
-  y: 100 + Math.floor(Math.random() * (400))
-};
-var TITLE = ["Большая уютная квартира", "Маленькая неуютная квартира", "Огромный прекрасный дворец", "Маленький ужасный дворец", "Красивый гостевой домик", "Некрасивый негостеприимный домик", "Уютное бунгало далеко от моря", "Неуютное бунгало по колено в воде"];
-var TYPE = ["flat", "house", "bungalo"];
-var CHECKIN = ["12:00", "13:00", "14:00"];
-var CHECKOUT = ["12:00", "13:00", "14:00"];
-var FEATURES = ["wifi", "dishwasher", "parking", "washer", "elevator", "conditioner"];
-var NUMBER_OF_ADV = 8; //Число объявлений
 var MAP_PIN_WIDTH = 50/2; //Половина ширины кнопки
 var MAP_PIN_HEIGHT = 70; //Высота кнопки
-var similarAdv = [];
+var USER_MAP_PIN_WIDTH = 64/2; //Половина ширины кнопки пользователя
+var USER_MAP_PIN_HEIGHT = 81; //Высота кнопки потльзователя
 var map = document.querySelector(".map");
 var template = document.querySelector("template").content;
 var mapPins = document.querySelector(".map__pins");
 var adForm = document.querySelector(".ad-form");
-var fieldsetForm = document.querySelectorAll("fieldset");
 var offerType = {
   flat: "Квартира",
   house: "Дом",
@@ -27,16 +17,11 @@ var allMapCards;
 var popupClose;
 var ENTER_KEYCODE = 13;
 var ESC_KEYCODE = 27;
+var click = 0;
+var address = document.querySelector("#address");
 
-//Генерация целого числа в диапазоне min max
-var getRandomInteger = function(min, max) {
-  return min + Math.floor(Math.random() * (max - min + 1))
-};
-//Генерация случайного числа в массиве
-var getRandomNumberForArray = function(array) {
-  return Math.floor(Math.random() * array.length)
-}
-
+address.value = "x: 602, y: 455"; //Устанавливаем значение по умолчанию для адреса
+address.setAttribute("readonly", "readonly");
 //Генерация иконки объявления - шаблона
 var generateAdv = function(similarAdvertPin, i) {
   var advElementPinTemplate = template.querySelector(".map__pin").cloneNode(true);
@@ -93,60 +78,63 @@ var createAdvFragmentMap = function() {
   return map.appendChild(fragmentMap);
 };
 
-//Генерируем похожие объявления
-(function() {
-  for (var i = 0; i < NUMBER_OF_ADV; i++) {
-    locationX = getRandomInteger(300, 900);
-    locationY = getRandomInteger(100, 500);
-    similarAdv.push({
-      author: {
-        avatar: "img/avatars/user0" + (i + 1) + ".png"
-      },
-      offer: {
-        title: TITLE[i],
-        adress: locationX + ", " + locationY,
-        price: getRandomInteger(1000, 1000000),
-        type: TYPE[getRandomNumberForArray(TYPE)],
-        rooms: getRandomInteger(1, 5),
-        guests: getRandomInteger(1, 20),
-        checkin: CHECKIN[getRandomNumberForArray(CHECKIN)],
-        checkout: CHECKOUT[getRandomNumberForArray(CHECKOUT)],
-        features: FEATURES.slice(getRandomInteger(0, 2), getRandomInteger(3, 5)),
-        description: "",
-        photos: []
-      },
-      location: {
-        x: locationX,
-        y: locationY
-      }
-    })
-  }
-  return similarAdv;
-})();
-//disabled - всем полям формы по умолчанию
-(function() {
-  for(var i = 0; i < fieldsetForm.length; i++) {
-    fieldsetForm[i].disabled = "true";
-  }
-})();
-//Обработка событий отпускания ЛКМ
-userPin.addEventListener("mouseup", function() {
-  map.classList.remove("map--faded");
-  //Вызов генерации всех иконок объявления - шаблона
-  createAdvFragmentPin();
-  //Вызов функции создания шаблона
-  createAdvFragmentMap();
-  //Отображаем форму
-  adForm.classList.remove("ad-form--disabled");
-  //Включаем поля формы
-  (function() {
-    for(var i = 0; i < fieldsetForm.length; i++) {
-      fieldsetForm[i].disabled = "false";
+userPin.addEventListener("mousedown", function(eventDown) {
+  eventDown.preventDefault();
+  var startCoords = {
+    x: eventDown.clientX,
+    y: eventDown.clientY
+  };
+  var onMouseMove = function(moveEvt) {
+    moveEvt.preventDefault();
+    var shift = {
+      x: startCoords.x - moveEvt.clientX,
+      y: startCoords.y - moveEvt.clientY
+    };
+    startCoords = {
+      x: moveEvt.clientX,
+      y: moveEvt.clientY
+    };
+    userPin.style.top = (userPin.offsetTop - shift.y) + "px";
+    userPin.style.left = (userPin.offsetLeft - shift.x) + "px";
+    address.value = "x: " + (userPin.offsetLeft + USER_MAP_PIN_WIDTH) + ", y: " + (userPin.offsetTop + USER_MAP_PIN_HEIGHT);
+    if (Number(userPin.style.top.slice(0, -2)) < 70) {
+      userPin.style.top = 70 + "px";
+    } else if (Number(userPin.style.top.slice(0, -2)) > 620) {
+      userPin.style.top = 620 + "px";
+    } else if (Number(userPin.style.left.slice(0, -2)) < -32) {
+      userPin.style.left = -32 + "px";
+    } else if (Number(userPin.style.left.slice(0, -2)) > 1166) {
+      userPin.style.left = 1166 + "px";
     }
-  })();
-  allMapPins = document.querySelectorAll(".map__pin");
-  allMapCards = document.querySelectorAll(".map__card");
-  popupClose = document.querySelectorAll(".popup__close");
+  };
+  var onMouseUp = function() {
+    click++;
+    map.classList.remove("map--faded");
+    (function() {
+      if (click <= 1) {
+        //Вызов генерации всех иконок объявления - шаблона
+        createAdvFragmentPin();
+        //Вызов функции создания шаблона
+        createAdvFragmentMap();
+        //Отображаем форму
+        adForm.classList.remove("ad-form--disabled");
+        //Включаем поля формы
+        (function() {
+          for(var i = 0; i < fieldsetForm.length; i++) {
+            fieldsetForm[i].removeAttribute("disabled");
+          }
+        })();
+        allMapPins = document.querySelectorAll(".map__pin");
+        allMapCards = document.querySelectorAll(".map__card");
+        popupClose = document.querySelectorAll(".popup__close");
+      }
+    })();
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mousemove", onMouseMove);
+  };
+  document.addEventListener("mousemove", onMouseMove);
+  //Обработка событий отпускания ЛКМ
+  document.addEventListener("mouseup", onMouseUp);
 });
 
 (function() {

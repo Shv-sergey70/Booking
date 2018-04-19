@@ -38,5 +38,5 @@ var similarAdv = [];
       }
     })
   }
-  return similarAdv;
+  // return similarAdv;
 })();

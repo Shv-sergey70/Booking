@@ -70,12 +70,23 @@ var renderMapCard = function(similarAdvMapCard) {
 };
 
 //Создание шаблона похожего объявления
-var createAdvFragmentMap = function() {
+
+// var createAdvFragmentMap = function() {
+//   var fragmentMap = document.createDocumentFragment();
+//   for (var i = 0; i < similarAdv.length; i++) {
+//     fragmentMap.appendChild(renderMapCard(similarAdv[i]));
+//   };
+//   return map.appendChild(fragmentMap);
+// };
+var successHandler = function (similarAdv) {
   var fragmentMap = document.createDocumentFragment();
   for (var i = 0; i < similarAdv.length; i++) {
     fragmentMap.appendChild(renderMapCard(similarAdv[i]));
   };
   return map.appendChild(fragmentMap);
+};
+var createAdvFragmentMap = function() {
+  window.load(successHandler);
 };
 
 userPin.addEventListener("mousedown", function(eventDown) {
@@ -137,7 +148,7 @@ userPin.addEventListener("mousedown", function(eventDown) {
   document.addEventListener("mouseup", onMouseUp);
 });
 
-(function() {
+
   map.addEventListener("click", function(event) {
   for (var i = 0; i < allMapCards.length; i++) {
     if ((event.target.classList.contains("map__pin")) || (event.target.parentNode.classList.contains("map__pin"))) {
@@ -176,4 +187,3 @@ userPin.addEventListener("mousedown", function(eventDown) {
       }
     }
   }, false);
-})();

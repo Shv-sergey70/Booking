@@ -629,9 +629,24 @@ fieldset {
 .ad-form__element input:focus,
 .ad-form__element select:focus,
 .ad-form__element textarea:focus {
-  outline: none;
   -webkit-box-shadow: 0 0 2px 2px #ff6547;
           box-shadow: 0 0 2px 2px #ff6547;
+}
+
+.ad-form__element input[readonly="readonly"]:disabled,
+.ad-form__element textarea[name="description"]:disabled {
+  border-color: #d9d9d3;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.ad-form__element input:required:valid,
+.ad-form__element select:valid,
+.ad-form__element input[readonly="readonly"],
+.ad-form__element textarea[name="description"] {
+  border-color: green;
+  -webkit-box-shadow: 0 0 2px 2px green;
+          box-shadow: 0 0 2px 2px green;
 }
 
 .ad-form__element--time {
